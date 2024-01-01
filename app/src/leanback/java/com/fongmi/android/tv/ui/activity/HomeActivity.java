@@ -112,7 +112,9 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     protected void initView() {
         DLNARendererService.Companion.start(this, R.drawable.ic_logo);
         mClock = Clock.create(mBinding.time).format("MM/dd HH:mm:ss");
-        Updater.get().release().start(this);
+
+        // Updater.get().release().start(this);
+
         Server.get().start();
         Tbs.init();
         setTitleView();

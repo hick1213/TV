@@ -54,8 +54,8 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private static final int RENDER_SURFACE_VIEW = 0;
     private static final int RENDER_TEXTURE_VIEW = 1;
 
-    private int mVideoWidth;
-    private int mVideoHeight;
+    private int mVideoWidth = 0;
+    private int mVideoHeight = 0;
 
     private int mTargetState;
     private int mCurrentState;
@@ -552,9 +552,9 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     @Override
     public void onVideoSizeChanged(IMediaPlayer mp, int width, int height, int sar_num, int sar_den) {
-        mVideoWidth = mp.getVideoWidth();
-        mVideoHeight = mp.getVideoHeight();
-        if (mVideoWidth != 0 && mVideoHeight != 0 && mRenderView != null) {
+        if (mVideoWidth != mp.getVideoWidth() && mVideoHeight != mp.getVideoHeight() && mRenderView != null) {
+            mVideoWidth = mp.getVideoWidth();
+            mVideoHeight = mp.getVideoHeight();
             mRenderView.setVideoSize(mVideoWidth, mVideoHeight);
             mRenderView.setVideoSampleAspectRatio(sar_num, sar_den);
             requestLayout();
