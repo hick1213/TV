@@ -15,6 +15,7 @@ import android.text.style.ClickableSpan;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -336,6 +337,7 @@ public class VideoActivity extends BaseActivity implements CustomKeyDownVod.List
         setViewModel();
         checkCast();
         checkId();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     @Override

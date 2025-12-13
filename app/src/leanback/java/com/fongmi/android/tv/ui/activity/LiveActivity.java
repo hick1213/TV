@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.media.MediaMetadataCompat;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
 
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
@@ -71,6 +72,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import tv.danmaku.ijk.media.player.ui.IjkVideoView;
 
@@ -155,6 +157,7 @@ public class LiveActivity extends BaseActivity implements Clock.Callback, GroupP
         setDisplayView();
         setViewModel();
         checkLive();
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     @Override
@@ -197,7 +200,11 @@ public class LiveActivity extends BaseActivity implements Clock.Callback, GroupP
     private void setPlayerView() {
         getIjk().setPlayer(mPlayers.getPlayer());
         mBinding.control.player.setText(mPlayers.getPlayerText());
-        getExo().setVisibility(mPlayers.isExo() ? View.VISIBLE : View.GONE);
+        int targetVisibility = mPlayers.isExo() ? View.VISIBLE : View.GONE;
+        if (getExo().getVisibility() != targetVisibility) {
+            getExo().setVisibility(targetVisibility);
+        }
+//        Objects.requireNonNull(getExo().getVideoSurfaceView()).setVisibility(targetVisibility);
         getIjk().setVisibility(mPlayers.isIjk() ? View.VISIBLE : View.GONE);
     }
 
