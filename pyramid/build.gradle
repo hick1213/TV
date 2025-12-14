@@ -8,7 +8,7 @@ android {
     flavorDimensions = ["abi"]
 
     defaultConfig {
-        minSdk 21
+        minSdk 19
         targetSdk 28
         python {
             version "3.8"
