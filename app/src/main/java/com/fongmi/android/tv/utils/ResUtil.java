@@ -128,7 +128,20 @@ public class ResUtil {
     }
 
     public static Display getDisplay(Activity activity) {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ? activity.getDisplay() : activity.getWindowManager().getDefaultDisplay();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                // 使用反射调用 getDisplay()，避免在低 API 级别上直接引用
+                java.lang.reflect.Method method = Activity.class.getMethod("getDisplay");
+                Object result = method.invoke(activity);
+                if (result instanceof Display) {
+                    return (Display) result;
+                }
+            } catch (Exception e) {
+                // 如果反射失败，回退到旧方法
+            }
+        }
+        // 回退到旧方法（适用于所有 API 级别）
+        return activity.getWindowManager().getDefaultDisplay();
     }
 
     public static int getTextWidth(String content, int size) {

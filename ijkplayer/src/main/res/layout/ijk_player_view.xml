@@ -15,8 +15,8 @@
 
     </FrameLayout>
 
-    <androidx.media3.ui.SubtitleView
-        android:id="@+id/ijk_subtitle"
+    <FrameLayout
+        android:id="@+id/ijk_subtitle_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

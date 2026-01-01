@@ -23,7 +23,6 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.dnsoverhttps.DnsOverHttps;
 
 public class OkHttp {
 
@@ -32,7 +31,7 @@ public class OkHttp {
     private static final ProxySelector defaultSelector;
 
     private boolean proxy;
-    private DnsOverHttps dns;
+    private Dns dns;
     private OkHttpClient client;
     private OkProxySelector selector;
 
@@ -53,8 +52,10 @@ public class OkHttp {
     }
 
     public void setDoh(Doh doh) {
-        OkHttpClient dohClient = new OkHttpClient.Builder().cache(new Cache(Path.doh(), CACHE)).build();
-        dns = doh.getUrl().isEmpty() ? null : new DnsOverHttps.Builder().client(dohClient).url(HttpUrl.get(doh.getUrl())).bootstrapDnsHosts(doh.getHosts()).build();
+        // DnsOverHttps requires API 21+ and OkHttp 3.14+
+        // For API 19 support with OkHttp 3.12.x, DnsOverHttps is not available
+        // Simply disable it and use system DNS instead
+        dns = null;
         client = null;
     }
 

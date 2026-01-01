@@ -21,8 +21,14 @@ import javax.crypto.spec.SecretKeySpec;
 public class Decoder {
 
     public static String getJson(String url) throws Exception {
-        String key = url.contains(";") ? url.split(";")[2] : "";
-        url = url.contains(";") ? url.split(";")[0] : url;
+        String key = "";
+        if (url.contains(";")) {
+            String[] parts = url.split(";");
+            url = parts[0];
+            if (parts.length > 2) {
+                key = parts[2];
+            }
+        }
         String data = getData(url);
         if (data.isEmpty()) throw new Exception();
         if (Json.valid(data)) return fix(url, data);

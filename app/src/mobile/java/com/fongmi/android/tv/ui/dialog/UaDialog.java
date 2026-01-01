@@ -70,7 +70,8 @@ public class UaDialog {
             binding.text.setText(Util.CHROME);
         } else if (append && "o".equalsIgnoreCase(s)) {
             append = false;
-            binding.text.setText(okhttp3.internal.Util.userAgent);
+            // OkHttp 3.12.x doesn't expose userAgent directly, use default OkHttp user agent
+            binding.text.setText("okhttp/3.12.13");
         } else if (s.length() > 1) {
             append = false;
         } else if (s.length() == 0) {

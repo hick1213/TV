@@ -122,7 +122,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         setViewModel();
         setHomeType();
         setPager();
-        initConfig();
+        // initConfig() 现在在 initEvent() 中调用，确保 fragment view 已创建
     }
 
     @Override
@@ -138,6 +138,29 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
             @Override
             public void onChildViewHolderSelected(@NonNull RecyclerView parent, @Nullable RecyclerView.ViewHolder child, int position, int subposition) {
                 onChildSelected(child);
+            }
+        });
+        // 确保第一个 fragment 的 view 已经创建后再加载配置
+        mBinding.pager.post(() -> {
+            try {
+                HomeFragment fragment = getHomeFragment();
+                if (fragment != null && fragment.getView() != null && fragment.mBinding != null) {
+                    initConfig();
+                } else {
+                    // 如果 fragment 还没创建，延迟一点再试
+                    mBinding.pager.postDelayed(() -> {
+                        try {
+                            HomeFragment delayedFragment = getHomeFragment();
+                            if (delayedFragment != null && delayedFragment.getView() != null && delayedFragment.mBinding != null) {
+                                initConfig();
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }, 100);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
@@ -269,7 +292,15 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     }
 
     private HomeFragment getHomeFragment() {
-        return (HomeFragment) mPageAdapter.instantiateItem(mBinding.pager, 0);
+        if (mPageAdapter == null || mBinding == null || mBinding.pager == null) {
+            return null;
+        }
+        try {
+            return (HomeFragment) mPageAdapter.instantiateItem(mBinding.pager, 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private VodFragment getFragment() {
@@ -334,7 +365,16 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
             @Override
             public void error(String msg) {
                 if (TextUtils.isEmpty(msg) && AppDatabase.getBackup().exists()) RestoreDialog.create(getActivity()).show();
-                getHomeFragment().mBinding.progressLayout.showContent();
+                try {
+                    HomeFragment fragment = getHomeFragment();
+                    // 确保 fragment 的 view 已经创建，mBinding 不为 null
+                    if (fragment != null && fragment.getView() != null && fragment.mBinding != null) {
+                        fragment.mBinding.progressLayout.showContent();
+                    }
+                } catch (Exception e) {
+                    // 如果获取 fragment 失败，忽略错误，继续执行其他逻辑
+                    e.printStackTrace();
+                }
                 mResult = Result.empty();
                 Notify.show(msg);
                 setFocus();

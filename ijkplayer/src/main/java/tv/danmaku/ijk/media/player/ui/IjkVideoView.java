@@ -18,6 +18,7 @@ import android.widget.MediaController;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.media3.ui.SubtitleView;
 
 import java.util.List;
@@ -75,7 +76,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
     private IMediaPlayer.Listener mListener;
     private IRenderView mRenderView;
 
-    private final SubtitleView mSubtitleView;
+    private SubtitleView mSubtitleView;
     private final AudioManager mAudioManager;
     private final FrameLayout mContentFrame;
     private final ImageView mArtworkView;
@@ -92,30 +93,57 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     public IjkVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        LayoutInflater.from(context).inflate(R.layout.ijk_player_view, this);
-        mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-        if (attrs != null) initAttr(context, attrs, defStyleAttr);
-        mContentFrame = findViewById(R.id.ijk_content_frame);
-        mSubtitleView = findViewById(R.id.ijk_subtitle);
-        mArtworkView = findViewById(R.id.ijk_artwork);
-        mCurrentPlayer = PLAYER_NONE;
-        mCurrentState = STATE_IDLE;
-        mTargetState = STATE_IDLE;
-        mCurrentSpeed = 1.0f;
-        setSubtitleView();
+        try {
+            LayoutInflater.from(context).inflate(R.layout.ijk_player_view, this);
+            mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+            if (attrs != null) initAttr(context, attrs, defStyleAttr);
+            mContentFrame = findViewById(R.id.ijk_content_frame);
+            FrameLayout subtitleContainer = findViewById(R.id.ijk_subtitle_container);
+            // 动态创建 SubtitleView，避免在 XML 中直接使用可能导致的问题
+            if (subtitleContainer != null) {
+                try {
+                    mSubtitleView = new SubtitleView(context);
+                    mSubtitleView.setLayoutParams(new FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.MATCH_PARENT));
+                    subtitleContainer.addView(mSubtitleView);
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to create SubtitleView", e);
+                    mSubtitleView = null;
+                }
+            }
+            mArtworkView = findViewById(R.id.ijk_artwork);
+            mCurrentPlayer = PLAYER_NONE;
+            mCurrentState = STATE_IDLE;
+            mTargetState = STATE_IDLE;
+            mCurrentSpeed = 1.0f;
+            setSubtitleView();
+        } catch (Exception e) {
+            Log.e(TAG, "Error inflating IjkVideoView", e);
+            throw new RuntimeException("Failed to inflate IjkVideoView", e);
+        }
     }
 
     private void setSubtitleView() {
         if (mSubtitleView == null) return;
-        mSubtitleView.setUserDefaultStyle();
-        mSubtitleView.setUserDefaultTextSize();
-        mSubtitleView.setApplyEmbeddedFontSizes(false);
+        try {
+            mSubtitleView.setUserDefaultStyle();
+            mSubtitleView.setUserDefaultTextSize();
+            mSubtitleView.setApplyEmbeddedFontSizes(false);
+        } catch (Exception e) {
+            // 如果设置字幕视图失败（可能在低 API 级别），忽略错误
+            Log.e(TAG, "Failed to set subtitle view", e);
+        }
     }
 
     private void initAttr(Context context, AttributeSet attrs, int defStyleAttr) {
         TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.IjkVideoView, defStyleAttr, 0);
         try {
-            mDefaultArtwork = context.getDrawable(a.getResourceId(R.styleable.IjkVideoView_default_artwork, 0));
+            int drawableId = a.getResourceId(R.styleable.IjkVideoView_default_artwork, 0);
+            if (drawableId != 0) {
+                // 使用 ContextCompat.getDrawable() 以支持 API 19+
+                mDefaultArtwork = ContextCompat.getDrawable(context, drawableId);
+            }
             mKeepContentOnPlayerReset = a.getBoolean(R.styleable.IjkVideoView_keep_content_on_player_reset, mKeepContentOnPlayerReset);
         } finally {
             a.recycle();
@@ -248,7 +276,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     private void reset() {
         removeRenderView();
-        mSubtitleView.setCues(null);
+        if (mSubtitleView != null) mSubtitleView.setCues(null);
         mTargetState = STATE_IDLE;
         mCurrentState = STATE_IDLE;
         mCurrentBufferPosition = 0;
@@ -385,7 +413,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             ITrackInfo trackInfo = trackInfos.get(index);
             if (trackInfo.getTrackType() != type) continue;
             if (index == track && selected != track) {
-                mSubtitleView.setCues(null);
+                if (mSubtitleView != null) mSubtitleView.setCues(null);
                 mPlayer.selectTrack(index);
                 updateForCurrentTrackSelections();
                 if (position > 0) seekTo(position);
@@ -400,7 +428,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
             ITrackInfo trackInfo = trackInfos.get(index);
             if (trackInfo.getTrackType() != type) continue;
             if (index == track && selected == track) {
-                mSubtitleView.setCues(null);
+                if (mSubtitleView != null) mSubtitleView.setCues(null);
                 mPlayer.deselectTrack(track);
                 updateForCurrentTrackSelections();
             }
@@ -535,7 +563,7 @@ public class IjkVideoView extends FrameLayout implements MediaController.MediaPl
 
     @Override
     public void onTimedText(IMediaPlayer mp, IjkTimedText text) {
-        mSubtitleView.setCues(SubtitleParser.parse(text.getText()));
+        if (mSubtitleView != null) mSubtitleView.setCues(SubtitleParser.parse(text.getText()));
     }
 
     @Override

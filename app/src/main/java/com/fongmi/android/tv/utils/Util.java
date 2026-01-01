@@ -183,7 +183,18 @@ public class Util {
 
     public static int batteryLevel() {
         BatteryManager batteryManager = (BatteryManager) App.get().getSystemService(Context.BATTERY_SERVICE);
-        return batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                // getIntProperty 在 API 28+ 可用
+                return batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+            } catch (Exception e) {
+                // 如果方法不存在，返回默认值
+                return 0;
+            }
+        } else {
+            // API < 28 不支持 getIntProperty，返回 0 或使用其他方法
+            return 0;
+        }
     }
 
     public static void restartApp(Activity activity) {

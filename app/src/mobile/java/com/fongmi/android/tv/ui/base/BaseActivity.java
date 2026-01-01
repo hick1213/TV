@@ -84,7 +84,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected void setPadding(ViewGroup layout, boolean leftOnly) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return;
-        DisplayCutout cutout = ResUtil.getDisplay(this).getCutout();
+        Display display = ResUtil.getDisplay(this);
+        if (display == null) return;
+        DisplayCutout cutout = display.getCutout();
         if (cutout == null) return;
         int top = cutout.getSafeInsetTop();
         int left = cutout.getSafeInsetLeft();
